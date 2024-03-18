@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/modules/ScalaDataPipeline.iml" filepath="$PROJECT_DIR$/.idea/modules/ScalaDataPipeline.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/modules/ScalaDataPipeline-build.iml" filepath="$PROJECT_DIR$/.idea/modules/ScalaDataPipeline-build.iml" />
     </modules>
   </component>
 </project>
