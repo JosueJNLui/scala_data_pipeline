@@ -7,3 +7,10 @@ lazy val root = (project in file("."))
     name := "ScalaDataPipeline",
     idePackagePrefix := Some("com.josuejnlui.datapipeline")
   )
+
+val sparkVersion = "3.5.0"
+
+libraryDependencies ++= Seq(
+  "org.apache.spark" %% "spark-sql" % sparkVersion,
+  "org.apache.spark" %% "spark-core" % sparkVersion
+)
