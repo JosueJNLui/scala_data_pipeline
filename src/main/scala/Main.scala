@@ -1,10 +1,8 @@
 package com.josuejnlui.datapipeline
 
-import com.fasterxml.jackson.module.scala.util.Strings
-import org.apache.hadoop.shaded.org.eclipse.jetty.util.ajax.JSON
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
-class SparkData() {
+class SparkData {
 
   private def fileFormat(path: String): String = {
 
@@ -26,7 +24,7 @@ class SparkData() {
       spark.read
         .options(Map(
           "header" -> "true",
-          "multiLine" -> "true"
+          "multiLine" -> "true",
         ))
         .csv(path)
     } else {
@@ -55,10 +53,14 @@ class SparkData() {
       sparkDataFrame.write
         .options(Map(
           "header" -> "true",
+          "overwrite" -> "true",
         ))
         .csv(path)
     } else if (format == "parquet") {
       sparkDataFrame.write
+        .options(Map(
+          "overwrite" -> "true",
+        ))
         .parquet(path)
     } else {
       throw new IllegalArgumentException("Unsupported format: " + format)
@@ -76,7 +78,7 @@ object Main {
       .getOrCreate()
 
     val sparkData = new SparkData()
-    var dataFrameA = sparkData.sparkReadFile(spark, "dataRaw/dados_empresaA.json")
+    val dataFrameA = sparkData.sparkReadFile(spark, "dataRaw/dados_empresaA.json")
     var dataFrameB = sparkData.sparkReadFile(spark, "dataRaw/dados_empresaB.csv")
 
     val keyMapping: Map[String, String] = Map(
@@ -92,7 +94,7 @@ object Main {
 
     val combinedSparkDataFrame: org.apache.spark.sql.DataFrame = sparkData.stackSparkDataFrames(dataFrameA, dataFrameB)
 
-    sparkData.saveSparkDataFrame(combinedSparkDataFrame, "dataProcessed/combinedData.csv")
+    sparkData.saveSparkDataFrame(combinedSparkDataFrame, "dataProcessed/combinedData.parquet")
 
   }
 }
