@@ -1,5 +1,6 @@
 package com.josuejnlui.datapipeline
 
+import com.fasterxml.jackson.module.scala.util.Strings
 import org.apache.hadoop.shaded.org.eclipse.jetty.util.ajax.JSON
 import org.apache.spark.sql.{DataFrame, SparkSession}
 
@@ -34,12 +35,36 @@ class SparkData() {
     sparkDataFrame
   }
 
-  def renameColumns(sparkDataFrame: org.apache.spark.sql.DataFrame, keyMapping: Map[String, String]) : org.apache.spark.sql.DataFrame = {
+  def renameColumns(sparkDataFrame: org.apache.spark.sql.DataFrame, keyMapping: Map[String, String]): org.apache.spark.sql.DataFrame = {
     val renamedSparkDataFrame: DataFrame = keyMapping.foldLeft(sparkDataFrame) {
       case (tempDF, (oldName, newName)) => tempDF.withColumnRenamed(oldName, newName)
     }
     renamedSparkDataFrame
   }
+
+  def stackSparkDataFrames(sparkDataFrameA: org.apache.spark.sql.DataFrame, sparkDataFrameB: org.apache.spark.sql.DataFrame): org.apache.spark.sql.DataFrame = {
+    var combinedSparkDataFrame: org.apache.spark.sql.DataFrame = sparkDataFrameA.unionByName(sparkDataFrameB, allowMissingColumns=true)
+    combinedSparkDataFrame = combinedSparkDataFrame.na.fill("INDISPONIVEL")
+    combinedSparkDataFrame
+  }
+
+  def saveSparkDataFrame(sparkDataFrame: org.apache.spark.sql.DataFrame, path: String): Unit = {
+
+    val format: String = fileFormat(path)
+    if (format == "csv") {
+      sparkDataFrame.write
+        .options(Map(
+          "header" -> "true",
+        ))
+        .csv(path)
+    } else if (format == "parquet") {
+      sparkDataFrame.write
+        .parquet(path)
+    } else {
+      throw new IllegalArgumentException("Unsupported format: " + format)
+    }
+  }
+
 }
 
 object Main {
@@ -64,6 +89,10 @@ object Main {
     )
 
     dataFrameB = sparkData.renameColumns(dataFrameB, keyMapping)
+
+    val combinedSparkDataFrame: org.apache.spark.sql.DataFrame = sparkData.stackSparkDataFrames(dataFrameA, dataFrameB)
+
+    sparkData.saveSparkDataFrame(combinedSparkDataFrame, "dataProcessed/combinedData.csv")
 
   }
 }
